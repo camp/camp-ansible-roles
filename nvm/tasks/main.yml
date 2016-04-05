@@ -1,0 +1,75 @@
+---
+# This role ensure nvm is installed
+#
+# Followed nvm official guide: https://github.com/creationix/nvm#manual-install
+
+- name: Ensure nvm root dir has correct permissions.
+  file:
+    path: "{{ nvm.root }}"
+    group: staff
+    mode: 0775
+    state: directory
+  sudo: yes
+
+# Shallow clone of nvm
+- name: Ensure nvm is installed
+  git:
+    repo: git://github.com/creationix/nvm.git
+    version: "{{ nvm.version }}"
+    dest: "{{ nvm.root }}"
+    update: no
+    accept_hostkey: yes
+    depth: 1
+
+# TODO: Use official module
+- name: Ensure .bashrc is configured correctly.
+  blockinfile:
+    dest: /etc/profile
+    marker: '### {mark} OSX-IMAGE-ROLES-NVM MANAGED BLOCK'
+    block: |
+        export NVM_NODEJS_ORG_MIRROR="{{ nvm.mirror_nodejs }}"
+        export NVM_IOJS_ORG_MIRROR="{{ nvm.mirror_iojs }}"
+
+        export NPM_CONFIG_REGISTRY="{{ nvm.npm_registry }}"
+
+        export NVM_DIR="{{ nvm.root }}"
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+  sudo: yes
+
+- name: Check whether default node.js version is installed
+  shell: bash -lc "nvm ls"
+  ignore_errors: yes
+  register: nvm_ls
+  changed_when: 'nvm_ls.stdout.find("{{ nvm.default }}") == -1'
+- name: Install default node.js version
+  shell: bash -lc "nvm install {{ nvm.default }}"
+  when: nvm_ls|changed
+
+- name: Check whether nvm default is configured
+  shell: bash -lc "nvm alias default"
+  register: nvm_default
+  changed_when: 'nvm_default.stdout != "default -> {{ nvm.default }}"'
+- name: Configure nvm default
+  shell: bash -lc "nvm alias default {{ nvm.default }}"
+  when: nvm_default|changed
+
+- name: Ensure npm global packages are installed
+  npm:
+    name: '{{ item.name }}'
+    version: '{{ item.version }}'
+    global: yes
+    production: yes
+    registry: '{{ nvm.npm_registry }}'
+    executable: '{{ nvm.root }}/versions/node/{{ nvm.default }}/bin/npm'
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ nvm.root }}/versions/node/{{ nvm.default }}/bin"
+  with_items: nvm.npm_global_packages
+  when: nvm.npm_global_packages
+
+- name: Ensure nvm is shared with in group staff
+  file:
+    path: '{{ nvm.root }}'
+    group: staff
+    mode: u=rwX,g=rwX,o=rX
+    recurse: yes
+  sudo: yes

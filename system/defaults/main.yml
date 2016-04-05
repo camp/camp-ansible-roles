@@ -1,0 +1,8 @@
+---
+system:
+  timezone: Asia/Shanghai
+  # Apple Software Update server address
+  su_server:
+  install_updates: yes
+  install_updates_automatic: yes
+  hidden_users:

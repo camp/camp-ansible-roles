@@ -1,0 +1,12 @@
+---
+- name: Copy scripts
+  copy: src={{ item.path }} dest="/var/root/{{ item.path | basename}}"
+  sudo: yes
+  with_items: keychain.certs_import_to_system
+  when: keychain.certs_import_to_system
+- name: Import certs into System keychain
+  command: 'security import "/var/root/{{ item.path | basename }}" -k /Library/Keychains/System.keychain -P "{{ item.passphrase }}" {{ item.import_options }}'
+  sudo: yes
+  with_items: keychain.certs_import_to_system
+  when: keychain.certs_import_to_system
+

@@ -1,0 +1,6 @@
+---
+
+shared_paths:
+- /usr/local
+- /Library/Caches/Homebrew
+- /opt/homebrew-cask

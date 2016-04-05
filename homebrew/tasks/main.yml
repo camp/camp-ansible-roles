@@ -1,0 +1,79 @@
+---
+# Followed homebrew official guide: https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/Installation.md
+# This role ensure Homebrew and Homebrew-Cask is installed
+
+- name: Ensure /usr/local has correct permissions.
+  file:
+    path: /usr/local
+    group: staff
+    mode: 0775
+    state: directory
+  sudo: yes
+
+# Shallow clone of homebrew to /usr/local
+- name: Ensure homebrew is installed
+  git:
+    repo: git://github.com/Homebrew/homebrew.git
+    version: master
+    dest: /usr/local
+    update: no
+    accept_hostkey: yes
+    depth: 1
+
+- name: Ensure proper permissions on homebrew's bin dirs.
+  file:
+    path: /usr/local/bin
+    group: staff
+    mode: 0775
+    state: directory
+    recurse: true
+  sudo: yes
+
+# Homebrew Cask
+- name: Ensure Homebrew Cask tap is installed.
+  homebrew_tap: "tap=caskroom/cask state=present"
+
+# Update homebrew
+- name: Ensure homebrew formulae and casks are updated
+  homebrew: update_homebrew=yes
+  when: homebrew.update_to_latest
+
+# Homebrew Taps
+- name: Ensure configured homebrew taps are installed.
+  homebrew_tap: "tap={{ item }} state=present"
+  with_items: homebrew.taps
+  when: homebrew.taps
+- name: Ensure configured homebrew taps outside Github are installed.
+  shell: /usr/local/bin/brew tap {{ item.name }} {{ item.url }}
+  with_items: homebrew.taps_out_of_github
+  when: homebrew.taps_out_of_github
+
+# Homebrew Formulae
+- name: Ensure configured homebrew formulae are installed.
+  homebrew: "name={{ item }} state=present"
+  with_items: homebrew.formulae
+  when: homebrew.formulae
+
+# Homebrew Casks
+- name: Ensure configured homebrew casks are installed.
+  homebrew_cask: "name={{ item }} state=present"
+  environment:
+    HOMEBREW_CASK_OPTS: --appdir=/Applications
+  with_items: homebrew.casks
+  when: homebrew.casks
+
+## Homebrew cleanup
+- name: Cleanup homebrew
+  shell: brew cleanup && brew cask cleanup
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+
+## Ensure Homebrew is shared with in group staff
+- name: Ensure Homebrew is shared with in group staff
+  file:
+    path: "{{ item }}"
+    group: staff
+    mode: u=rwX,g=rwX,o=rX
+    recurse: yes
+  with_items: shared_paths
+  sudo: yes

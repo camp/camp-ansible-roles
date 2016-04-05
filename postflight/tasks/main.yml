@@ -1,0 +1,12 @@
+---
+
+- name: Copy scripts
+  copy: src={{ postflight.job }} dest=/var/root/postflight.sh owner=root group=admin mode=0700
+  sudo: yes
+  register: postflight_script
+
+# Shallow clone of homebrew to /usr/local
+- name: Install scripts
+  shell: /usr/local/bin/launchd-oneshot /var/root/postflight.sh
+  sudo: yes
+  when: postflight_script|changed

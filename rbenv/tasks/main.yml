@@ -1,0 +1,106 @@
+---
+# This role ensure rbenv is installed
+#
+# Followed rbenv official guide: https://github.com/rbenv/rbenv#basic-github-checkout
+
+- name: Ensure plugins dir has correct permissions.
+  file:
+    path: "{{ rbenv.root }}"
+    group: staff
+    mode: 0775
+    state: directory
+  sudo: yes
+
+# Shallow clone of rbenv to /opt/rbenv
+- name: Ensure rbenv is installed
+  git:
+    repo: git://github.com/rbenv/rbenv.git
+    version: master
+    dest: "{{ rbenv.root }}"
+    update: no
+    accept_hostkey: yes
+    depth: 1
+
+- name: Ensure plugins dir has correct permissions.
+  file:
+    path: "{{ rbenv.root }}/plugins"
+    group: staff
+    mode: 0775
+    state: directory
+  sudo: yes
+
+- name: Ensure ruby-build plugin is installed
+  git:
+    repo: git://github.com/rbenv/ruby-build.git
+    dest: '{{ rbenv.root }}/plugins/ruby-build'
+    version: '{{ rbenv.ruby_build_version }}'
+    accept_hostkey: true
+    depth: 1
+
+- name: Ensure plugins for system
+  git:
+    repo: "{{ item.url }}"
+    dest: "{{ rbenv.root }}/plugins/{{ item.name }}"
+    version: "{{ item.version }}"
+    accept_hostkey: true
+    depth: 1
+    force: yes
+  with_items: rbenv.plugins
+
+# TODO: Use official module
+- name: Ensure .bashrc is configured correctly.
+  blockinfile:
+    dest: /etc/profile
+    marker: '# {mark} OSX-IMAGE-ROLES-RBENV MANAGED BLOCK'
+    block: |
+        export RBENV_ROOT="{{ rbenv.root }}"
+        export PATH="$RBENV_ROOT/bin:$PATH"
+        eval "$(rbenv init -)"
+  sudo: yes
+
+- name: Check rbenv global installed for system
+  shell: bash -lc "rbenv versions"
+  register: rbenv_global_installed
+  changed_when: 'rbenv_global_installed.stdout.find("{{ rbenv.global }}") == -1'
+  when: rbenv.global != "system"
+- name: Install ruby {{ rbenv.global }} for system
+  shell: bash -lc "rbenv install {{ rbenv.global }}"
+  when: rbenv_global_installed|changed
+
+- name: Check rbenv global configured
+  shell: bash -lc "rbenv global"
+  register: rbenv_global
+  changed_when: 'rbenv_global.stdout != "{{ rbenv.global }}"'
+- name: Ensure global ruby is correct
+  shell: bash -lc "rbenv global {{ rbenv.global }}"
+  when: rbenv_global|changed
+
+- name: Check gem sources
+  shell: bash -lc "gem sources -l | tail -n+3"
+  register: gem_sources
+  changed_when: '"gem_sources.stdout_lines | symmetric_difference(rbenv.gem_sources) | count" != 0'
+- name: Remove invalid gem sources
+  shell: bash -lc "gem sources -r {{ item }}"
+  with_items: gem_sources.stdout_lines | difference(rbenv.gem_sources)
+  when: gem_sources|changed
+- name: Install configured gem sources
+  shell: bash -lc "gem sources -a {{ item }}"
+  with_items: rbenv.gem_sources | difference(gem_sources.stdout_lines)
+  when: gem_sources|changed
+
+- name: Ensure gems are installed
+  gem:
+    name: '{{ item.name }}'
+    version: '{{ item.version }}'
+    executable: '{{ rbenv.root }}/shims/gem'
+    user_install: false
+  with_items: rbenv.gems
+  when: rbenv.gems
+
+- name: Ensure rbenv is shared with in group staff
+  file:
+    path: "{{ rbenv.root }}"
+    group: staff
+    mode: u=rwX,g=rwX,o=rX
+    recurse: yes
+  sudo: yes

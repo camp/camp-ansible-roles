@@ -1,0 +1,141 @@
+---
+- name: Ensure system timezone is correct
+  command: /usr/sbin/systemsetup -gettimezone
+  sudo: yes
+  register: timezone
+  changed_when: timezone.stdout.find(system.timezone) == -1
+- name: Setup system timezone
+  command: /usr/sbin/systemsetup -settimezone {{ system.timezone }}
+  sudo: yes
+  when: timezone|changed
+
+- name: Ensure system is using network time
+  command: /usr/sbin/systemsetup -getusingnetworktime
+  sudo: yes
+  register: using_network_time
+  changed_when: 'using_network_time.stdout != "Network Time: On"'
+- name: Setup system using network time
+  command: /usr/sbin/systemsetup -setusingnetworktime on
+  sudo: yes
+  when: using_network_time|changed
+
+- name: Ensure system network time server is correct
+  command: /usr/sbin/systemsetup -getnetworktimeserver
+  sudo: yes
+  register: network_time_server
+  changed_when: 'network_time_server.stdout != "Network Time Server: time.apple.com"'
+- name: Setup system network time server
+  command: /usr/sbin/systemsetup -setnetworktimeserver time.apple.com
+  sudo: yes
+  when: network_time_server|changed
+
+# Unsynced time will block system updates sometimes,
+# see http://osxdaily.com/2015/01/19/fix-os-x-install-errors-cant-be-verified-error-occurred-preparing-mac/
+- name: Ensure time is synced
+  command: ntpdate -u time.apple.com
+  sudo: yes
+
+- name: Ensure firewall is enabled
+  command: /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+  register: firewall
+  changed_when: firewall.stdout.find("Firewall is enabled.") == -1
+- name: Enable firewall
+  command: /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+  sudo: yes
+  when: firewall|changed
+
+# See https://support.apple.com/en-us/HT203998
+- name: Ensure given users are hidden
+  command: dscl . read /Users/{{ item }} IsHidden
+  sudo: yes
+  with_items: system.hidden_users
+  register: hidden
+  changed_when: 'hidden.stdout.find("dsAttrTypeNative:IsHidden: 1") == -1'
+  when: system.hidden_users
+- name: Hide users
+  command: dscl . create /Users/{{ item.item }} IsHidden 1
+  sudo: yes
+  with_items: hidden.results
+  when: hidden|changed
+
+- name: Ensure Developer Mode is enabled
+  command: /usr/sbin/DevToolsSecurity -status
+  register: developer_mode
+  changed_when: 'developer_mode.stdout.find("Developer mode is currently enabled.") == -1'
+- name: Enable Developer Mode
+  command: /usr/sbin/DevToolsSecurity -enable
+  sudo: yes
+  when: developer_mode|changed
+
+# Let normal user install Apple Softwares, such as iOS Simulators
+# See http://stackoverflow.com/a/20963159/622662
+- name: Check user can install Apple-provided softwares
+  command: security authorizationdb read system.install.apple-software
+  register: install_apple_software
+  changed_when: 'install_apple_software.stdout.find("<string>allow</string>") == -1'
+- name: Enable installing Apple-provided softwares
+  command: security authorizationdb write system.install.apple-software allow
+  sudo: yes
+  when: install_apple_software|changed
+
+- name: Ensure .bashrc is configured correctly.
+  blockinfile:
+    dest: /etc/profile
+    marker: '### {mark} OSX-IMAGE-ROLES-SYSTEM MANAGED BLOCK'
+    block: |
+        export LANG=en_US.UTF-8
+        export LANGUAGE=en_US.UTF-8
+        export LC_ALL=en_US.UTF-8
+  sudo: yes
+
+- name: Check Software Update server address
+  command: defaults read /Library/Preferences/com.apple.SoftwareUpdate CatalogURL
+  ignore_errors: yes
+  register: su_server
+  when: system.su_server is defined
+  changed_when: 'su_server.stdout != "{{ system.su_server }}"'
+- name: Update SU server address
+  command: 'defaults write /Library/Preferences/com.apple.SoftwareUpdate CatalogURL {{ system.su_server }}'
+  sudo: yes
+  when:
+  - system.su_server is defined
+  - su_server|changed
+
+- name: Create the placeholder file that's checked by softwareupdate to install Xcode CLI tools
+  file:
+    path: /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+    state: touch
+- name: Check system is update to date
+  command: softwareupdate -l --no-scan
+  register: system_updated
+  changed_when: 'system_updated.stdout.find("No new software available.") == -1'
+  when: system.install_updates
+- name: Update System
+  command: softwareupdate -i -a --no-scan
+  sudo: yes
+  when: system_updated|changed
+- name: restart machine
+  shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+  async: 1
+  poll: 0
+  sudo: yes
+  when: system_updated|changed
+# port=drained needs install psutil, which can not be setup easily
+- name: waiting for server to come back
+  local_action:
+    module: wait_for
+      path=/var/db/.AppleSetupDone
+      delay=60
+      timeout=300
+      state=started
+  sudo: false
+  when: system_updated|changed
+- name: Check Automatic System Updates
+  command: softwareupdate --schedule
+  register: system_auto_update
+  changed_when: 'system_auto_update.stdout != "Automatic check is {{ system.install_updates_automatic | ternary("on", "off") }}"'
+  sudo: yes
+- name: Ensure Automatic System Updates
+  command: 'softwareupdate --schedule {{ system.install_updates_automatic | ternary("on", "off") }}'
+  sudo: yes
+  when: system_auto_update|changed

@@ -1,0 +1,13 @@
+---
+# rbenv settings
+rbenv:
+  # RBENV_ROOT
+  root: /opt/rbenv
+  ruby_build_version: v20151028
+  plugins:
+  - { name: 'ruby-build', url: 'git://github.com/rbenv/ruby-build.git', version: 'v20151028' }
+  global: system
+  gems:
+  - { name: 'git-copy' , version: '0.2.1' }
+  gem_sources:
+  - https://rubygems.org

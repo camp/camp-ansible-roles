@@ -1,0 +1,11 @@
+---
+# nvm settings
+nvm:
+  root: /opt/nvm
+  version: v0.30.1
+  default: v5.0.0
+  mirror_nodejs: http://npm.taobao.org/mirrors/node
+  mirror_iojs: http://npm.taobao.org/mirrors/iojs
+  npm_registry: http://registry.npm.taobao.org
+  npm_global_packages:
+  - { name: 'yo' , version: '1.5.1' }

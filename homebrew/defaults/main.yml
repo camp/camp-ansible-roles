@@ -1,0 +1,17 @@
+---
+# Homebrew settings
+homebrew:
+  # Update homebrew
+  update_to_latest: false
+  # Add Homebrew Formulae here
+  formulae:
+  - git
+  # Add Homebrew Taps here
+  taps:
+  - homebrew/versions
+  # Add Homebrew Taps out of Github here
+  taps_out_of_github:
+  - { name: 'quanlong/cask' , url: 'https://gitlab.com/quanlong/homebrew-cask.git' }
+  # Add Homebrew Casks here
+  casks:
+  - iterm2
