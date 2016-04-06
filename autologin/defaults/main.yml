@@ -1,0 +1,5 @@
+---
+# Autologin settings
+autologin:
+  username: vagrant
+  password: vagrant

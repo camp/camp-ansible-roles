@@ -1,0 +1,12 @@
+---
+
+# See
+# - http://www.brock-family.org/gavin/perl/kcpassword.html
+# - http://apple.stackexchange.com/q/50652/88922
+- name: Ensure keychain password is stored in /etc/kcpassword with XOR cipher encoding
+  script: ../../../base/scripts/support/set_kcpassword.py {{ autologin.password }}
+  sudo: yes
+
+- name: Ensure enabled autologin in System Preferences
+  command: /usr/bin/defaults write /Library/Preferences/com.apple.loginwindow autoLoginUser {{ autologin.username }}
+  sudo: yes
