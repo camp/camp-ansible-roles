@@ -34,28 +34,28 @@
   homebrew_tap: "tap=caskroom/cask state=present"
 
 # Update homebrew
-- name: Ensure homebrew formulae and casks are updated
+- name: Ensure formulae and casks are updated
   homebrew: update_homebrew=yes
   when: homebrew.update_to_latest
 
 # Homebrew Taps
-- name: Ensure configured homebrew taps are installed.
+- name: Ensure configured taps are installed.
   homebrew_tap: "tap={{ item }} state=present"
   with_items: homebrew.taps
   when: homebrew.taps
-- name: Ensure configured homebrew taps outside Github are installed.
+- name: Ensure configured taps outside Github are installed.
   shell: /usr/local/bin/brew tap {{ item.name }} {{ item.url }}
   with_items: homebrew.taps_out_of_github
   when: homebrew.taps_out_of_github
 
 # Homebrew Formulae
-- name: Ensure configured homebrew formulae are installed.
+- name: Ensure configured formulae are installed.
   homebrew: "name={{ item }} state=present"
   with_items: homebrew.formulae
   when: homebrew.formulae
 
 # Homebrew Casks
-- name: Ensure configured homebrew casks are installed.
+- name: Ensure configured casks are installed.
   homebrew_cask: "name={{ item }} state=present"
   environment:
     HOMEBREW_CASK_OPTS: --appdir=/Applications
@@ -63,7 +63,7 @@
   when: homebrew.casks
 
 ## Homebrew cleanup
-- name: Cleanup homebrew
+- name: Cleanup
   shell: brew cleanup && brew cask cleanup
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
@@ -77,3 +77,4 @@
     recurse: yes
   with_items: shared_paths
   sudo: yes
+  when: homebrew.shared

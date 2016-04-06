@@ -3,6 +3,8 @@
 homebrew:
   # Update homebrew
   update_to_latest: false
+  # Shared with group staff, means all user have rw permissions of Homebrew
+  shared: false
   # Add Homebrew Formulae here
   formulae:
   - git
