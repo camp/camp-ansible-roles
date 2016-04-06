@@ -13,7 +13,7 @@
 # Shallow clone of homebrew to /usr/local
 - name: Ensure homebrew is installed
   git:
-    repo: git://github.com/Homebrew/homebrew.git
+    repo: git://github.com/Homebrew/brew.git
     version: master
     dest: /usr/local
     update: no
@@ -28,6 +28,10 @@
     state: directory
     recurse: true
   sudo: yes
+
+# Homebrew Cask
+- name: Ensure Homebrew Core is installed.
+  homebrew_tap: "tap=homebrew/core state=present"
 
 # Homebrew Cask
 - name: Ensure Homebrew Cask tap is installed.
