@@ -1,4 +1,11 @@
 ---
+- name: Update dns server
+  command: 'networksetup -setdnsservers Ethernet {{ system.name_servers|default(["Empty"], true)|join(" ") }}'
+  sudo: yes
+- name: Clear dns caches
+  command: 'dscacheutil -flushcache ; killall -HUP mDNSResponder'
+  sudo: yes
+
 - name: Ensure system timezone is correct
   command: /usr/sbin/systemsetup -gettimezone
   sudo: yes
@@ -100,7 +107,12 @@
   when:
   - system.su_server is defined
   - su_server|changed
-
+- name: Setup VNC
+  command: '/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
+              -activate -configure -access -on -restart -agent -privs -all \
+              -clientopts -setvnclegacy -vnclegacy yes -setvncpw -vncpw "{{ system.vnc_password }}"'
+  sudo: yes
+  when: system.vnc_password
 - name: Create the placeholder file that's checked by softwareupdate to install Xcode CLI tools
   file:
     path: /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress

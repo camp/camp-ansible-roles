@@ -6,3 +6,8 @@ system:
   install_updates: yes
   install_updates_automatic: yes
   hidden_users:
+  name_servers:
+  - 8.8.8.8
+  - 8.8.4.4
+  # Leave password empty will disable vnc
+  vnc_password:
