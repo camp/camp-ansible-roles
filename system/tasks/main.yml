@@ -95,18 +95,14 @@
         export LC_ALL=en_US.UTF-8
   sudo: yes
 
-- name: Check Software Update server address
-  command: defaults read /Library/Preferences/com.apple.SoftwareUpdate CatalogURL
-  ignore_errors: yes
-  register: su_server
-  when: system.su_server is defined
-  changed_when: 'su_server.stdout != "{{ system.su_server }}"'
-- name: Update SU server address
-  command: 'defaults write /Library/Preferences/com.apple.SoftwareUpdate CatalogURL {{ system.su_server }}'
+- name: Clear SUS catalog URL
+  command: softwareupdate --clear-catalog
   sudo: yes
-  when:
-  - system.su_server is defined
-  - su_server|changed
+  ignore_errors: yes
+- name: Ensure SUS catalog URL is provisioned
+  command: 'softwareupdate --clear-catalog {{ system.su_server }}'
+  sudo: yes
+  when: system.su_server
 - name: Setup VNC
   command: '/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
               -activate -configure -access -on -restart -agent -privs -all \
