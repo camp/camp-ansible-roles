@@ -2,3 +2,5 @@
 keychain:
   certs_import_to_system:
   - { path: /path/to/xcode_dev_cert.p12, passphrase: "", import_options: "-x -T /usr/bin/codesign" }
+  passwords_import_to_system:
+  - { server: "http://example.com", account: "username", password: "safe" }

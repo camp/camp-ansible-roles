@@ -10,3 +10,7 @@
   with_items: keychain.certs_import_to_system
   when: keychain.certs_import_to_system
 
+- name: Import passwords into System keychain
+  command: 'security add-internet-password -s "{{ item.server }}" -a "{{ item.account }}" -w "{{ item.password }}" system'
+  with_items: keychain.passwords_import_to_system
+  when: keychain.passwords_import_to_system
