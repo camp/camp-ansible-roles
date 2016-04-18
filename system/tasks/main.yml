@@ -100,8 +100,9 @@
   sudo: yes
   ignore_errors: yes
 - name: Ensure SUS catalog URL is provisioned
-  command: 'softwareupdate --clear-catalog {{ system.su_server }}'
+  command: 'softwareupdate --set-catalog {{ system.su_server }}'
   sudo: yes
+  ignore_errors: yes
   when: system.su_server
 - name: Setup VNC
   command: '/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
