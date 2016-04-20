@@ -117,7 +117,7 @@
 - name: Check system is update to date
   command: softwareupdate -l --no-scan
   register: system_updated
-  changed_when: 'system_updated.stdout.find("No new software available.") == -1'
+  changed_when: 'system_updated.stderr.find("No new software available.") == -1'
   when: system.install_updates
 - name: Update System
   command: softwareupdate -i -a --no-scan
