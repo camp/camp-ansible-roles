@@ -115,7 +115,7 @@
     path: /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
     state: touch
 - name: Check system is update to date
-  command: softwareupdate -l --no-scan
+  command: softwareupdate -l
   register: system_updated
   changed_when: 'system_updated.stderr.find("No new software available.") == -1'
   when: system.install_updates
