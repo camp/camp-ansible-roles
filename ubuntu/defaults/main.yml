@@ -1,0 +1,44 @@
+---
+# ubuntu settings
+ubuntu:
+  mirrors:
+    - deb http://mirrors.aliyun.com/ubuntu/ trusty main
+    - deb-src http://mirrors.aliyun.com/ubuntu/ trusty main
+  update_to_latest: false
+  remove_useless: false
+  useless_list:
+    - unity-webapps-common
+    - thunderbird
+    - totem
+    - rhythmbox
+    - empathy
+    - brasero
+    - simple-scan
+    - gnome-mahjongg
+    - aisleriot
+    - gnome-mines
+    - cheese
+    - transmission-common
+    - gnome-orca
+    - webbrowser-app
+    - gnome-sudoku
+    - landscape-client-ui-install
+    - onboard
+    - deja-dup
+  commands:
+    - wget # 1.15-1ubuntu1.14.04.1 / 1.15-1ubuntu1
+    - curl # 7.35.0-1ubuntu2.6 / 7.35.0-1ubuntu2
+    - gimp # GNU Image Manipulation Program
+    - zip
+    - rar
+    - fcitx # Input method framework
+  install_chrome: false
+  install_skype: false
+  install_virtualbox: false
+  install_wps: false
+  install_sogoupinyin: false
+  for_dev: false
+  dev_commands:
+    - git # 1:1.9.1-1ubuntu0.3 / 1:1.9.1-1
+    - dia # GTK+ based diagram creation program
+  domain_control: false

@@ -1,0 +1,97 @@
+---
+# Run base on Andible 2.1 or hight.
+
+- name: Add i386 architecture.
+  shell: dpkg --add-architecture i386
+
+- name: Remove useless commands.
+  apt: name={{ ubuntu.useless_list }} state=absent allow_unauthenticated=yes
+  when: ubuntu.remove_useless and ubuntu.useless_list
+
+- name: Add apt source mirrors.
+  apt_repository: repo="{{ item }}" filename=apt-source-mirrors state=present
+  with_items: ubuntu.mirrors
+  when: ubuntu.mirrors
+
+- name: Ensure configured commands are installed.
+  apt: name={{ ubuntu.commands }} state=present allow_unauthenticated=yes
+  when: ubuntu.commands
+
+- name: Ensure development commands are installed.
+  apt: name={{ ubuntu.dev_commands }} state=present allow_unauthenticated=yes
+  when: ubuntu.for_dev and ubuntu.dev_commands
+
+- name: Ensure Soguo pinyin repository is added into sources list.
+  apt_repository: repo="deb http://archive.ubuntukylin.com:10006/ubuntukylin trusty main" filename=sogoupinyin state=present
+  when: ubuntu.install_sogoupinyin
+
+- name: Ensure Soguo pinyin is installed.
+  apt: name=sogoupinyin state=present allow_unauthenticated=yes
+  when: ubuntu.install_sogoupinyin
+
+- name: Install WPS.
+  apt: deb=http://kdl.cc.ksosoft.com/wps-community/download/a20/wps-office_10.1.0.5444-a20_amd64.deb
+  # apt: deb=/vagrant/ansible/roles/ubuntu/files/wps-office_10.1.0.5444-a20_amd64.deb
+  when: ubuntu.install_wps
+
+- name: Remove libreoffice-common.
+  apt: name=libreoffice-common state=absent allow_unauthenticated=yes
+  when: ubuntu.install_wps
+
+- name: Ensure skype repository is added into sources list.
+  apt_repository: repo="deb http://archive.canonical.com/ trusty partner" filename=skype state=present
+  when: ubuntu.install_skype
+
+- name: Ensure skype is installed.
+  apt: name=skype state=present allow_unauthenticated=yes
+  when: ubuntu.install_skype
+
+- name: Add chrome brower apt source.
+  apt_repository: repo="deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" filename=google-chrome state=present
+  when: ubuntu.install_chrome
+
+- name: Add chrome brower apt key.
+  apt_key: url=https://dl-ssl.google.com/linux/linux_signing_key.pub keyring=/etc/apt/trusted.gpg.d/google-chrome.gpg state=present
+  when: ubuntu.install_chrome
+
+- name: Ensure chrome brower is installed.
+  apt: name=google-chrome-stable state=present allow_unauthenticated=yes
+  when: ubuntu.install_chrome
+
+- name: Uninstall firefox.
+  apt: name=firefox state=absent allow_unauthenticated=yes
+  when: ubuntu.install_chrome
+
+- name: Add virtualbox apt source.
+  apt_repository: repo="deb http://download.virtualbox.org/virtualbox/debian trusty contrib" filename=virtualbox state=present
+  when: ubuntu.install_virtualbox
+
+- name: Add virtualbox apt key.
+  apt_key: url=https://www.virtualbox.org/download/oracle_vbox_2016.asc keyring=/etc/apt/trusted.gpg.d/oracle-vbox-2016.gpg state=present
+  when: ubuntu.install_virtualbox
+
+- name: Add virtualbox apt key.
+  apt_key: url=https://www.virtualbox.org/download/oracle_vbox.asc keyring=/etc/apt/trusted.gpg.d/oracle-vbox.gpg state=present
+  when: ubuntu.install_virtualbox
+
+- name: Ensure virtualbox is installed.
+  apt: name={{ item }} state=present allow_unauthenticated=yes
+  with_items:
+    - dkms # Dynamic Kernel Module Support
+    - virtualbox-5.0
+  when: ubuntu.install_virtualbox
+
+- name: Install likewise-open for add to windows domain.
+  apt: deb=https://launchpad.net/ubuntu/+archive/primary/+files/likewise-open_6.1.0.406-0ubuntu5.1_amd64.deb
+  when: ubuntu.domain_control
+
+- name: Install gdm use for login with domain account.
+  apt: name=gdm state=present allow_unauthenticated=yes
+  when: ubuntu.domain_control
+
+- name: Remove automatically all unused packages.
+  shell: apt-get -y autoremove
+
+- name: Distribution upgrade apt installed.
+  apt: upgrade=dist force=yes allow_unauthenticated=yes
+  when: ubuntu.update_to_latest
