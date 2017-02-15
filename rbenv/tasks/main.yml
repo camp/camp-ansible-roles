@@ -51,7 +51,7 @@
 - name: Ensure .bashrc is configured correctly.
   blockinfile:
     dest: /etc/profile
-    marker: '# {mark} OSX-IMAGE-ROLES-RBENV MANAGED BLOCK'
+    marker: '### {mark} -- CAMP MANAGED BLOCK: RBENV'
     block: |
         export RBENV_ROOT="{{ rbenv.root }}"
         export PATH="$RBENV_ROOT/bin:$PATH"

@@ -88,7 +88,7 @@
 - name: Ensure .bashrc is configured correctly.
   blockinfile:
     dest: /etc/profile
-    marker: '### {mark} OSX-IMAGE-ROLES-SYSTEM MANAGED BLOCK'
+    marker: '### {mark} -- CAMP MANAGED BLOCK: SYSTEM'
     block: |
         export LANG=en_US.UTF-8
         export LANGUAGE=en_US.UTF-8
