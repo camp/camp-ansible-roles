@@ -34,7 +34,8 @@
     repo: git://github.com/rbenv/ruby-build.git
     dest: '{{ rbenv.root }}/plugins/ruby-build'
     version: '{{ rbenv.ruby_build_version }}'
-    accept_hostkey: true
+    force: yes
+    accept_hostkey: yes
     depth: 1
 
 - name: Ensure plugins for system
@@ -42,10 +43,10 @@
     repo: "{{ item.url }}"
     dest: "{{ rbenv.root }}/plugins/{{ item.name }}"
     version: "{{ item.version }}"
-    accept_hostkey: true
+    accept_hostkey: yes
     depth: 1
     force: yes
-  with_items: rbenv.plugins
+  with_items: "{{ rbenv.plugins }}"
 
 # TODO: Use official module
 - name: Ensure .bashrc is configured correctly.
@@ -81,11 +82,11 @@
   changed_when: '"gem_sources.stdout_lines | symmetric_difference(rbenv.gem_sources) | count" != 0'
 - name: Remove invalid gem sources
   shell: bash -lc "gem sources -r {{ item }}"
-  with_items: gem_sources.stdout_lines | difference(rbenv.gem_sources)
+  with_items: "{{ gem_sources.stdout_lines | difference(rbenv.gem_sources) }}"
   when: gem_sources|changed
 - name: Install configured gem sources
   shell: bash -lc "gem sources -a {{ item }}"
-  with_items: rbenv.gem_sources | difference(gem_sources.stdout_lines)
+  with_items: "{{ rbenv.gem_sources | difference(gem_sources.stdout_lines) }}"
   when: gem_sources|changed
 
 - name: Ensure gems are installed
@@ -94,7 +95,7 @@
     version: '{{ item.version }}'
     executable: '{{ rbenv.root }}/shims/gem'
     user_install: false
-  with_items: rbenv.gems
+  with_items: "{{ rbenv.gems }}"
   when: rbenv.gems
 
 - name: Ensure rbenv is shared with in group staff
