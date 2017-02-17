@@ -110,10 +110,6 @@
               -clientopts -setvnclegacy -vnclegacy yes -setvncpw -vncpw "{{ system.vnc_password }}"'
   sudo: yes
   when: system.vnc_password
-- name: Create the placeholder file that's checked by softwareupdate to install Xcode CLI tools
-  file:
-    path: /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
-    state: touch
 - name: Check system is update to date
   command: softwareupdate -l
   register: system_updated
