@@ -1,0 +1,4 @@
+---
+# Nullify free space, aee http://superuser.com/a/1157264/78113
+- name: Ensure disk is compactable
+  shell: diskutil secureErase freespace 0 "/Volumes/Macintosh HD"
