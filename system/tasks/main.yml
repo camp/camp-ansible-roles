@@ -55,14 +55,14 @@
 - name: Ensure given users are hidden
   command: dscl . read /Users/{{ item }} IsHidden
   sudo: yes
-  with_items: system.hidden_users
+  with_items: "{{ system.hidden_users }}"
   register: hidden
   changed_when: 'hidden.stdout.find("dsAttrTypeNative:IsHidden: 1") == -1'
   when: system.hidden_users
 - name: Hide users
   command: dscl . create /Users/{{ item.item }} IsHidden 1
   sudo: yes
-  with_items: hidden.results
+  with_items: "{{ hidden.results }}"
   when: hidden|changed
 
 - name: Ensure Developer Mode is enabled
@@ -88,7 +88,7 @@
 - name: Ensure .bashrc is configured correctly.
   blockinfile:
     dest: /etc/profile
-    marker: '### {mark} OSX-IMAGE-ROLES-SYSTEM MANAGED BLOCK'
+    marker: '### {mark} -- CAMP MANAGED BLOCK: SYSTEM'
     block: |
         export LANG=en_US.UTF-8
         export LANGUAGE=en_US.UTF-8

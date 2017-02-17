@@ -25,7 +25,7 @@
 - name: Ensure .bashrc is configured correctly.
   blockinfile:
     dest: /etc/profile
-    marker: '### {mark} OSX-IMAGE-ROLES-NVM MANAGED BLOCK'
+    marker: '### {mark} -- CAMP MANAGED BLOCK: NVM'
     block: |
         export NVM_NODEJS_ORG_MIRROR="{{ nvm.mirror_nodejs }}"
         export NVM_IOJS_ORG_MIRROR="{{ nvm.mirror_iojs }}"
@@ -63,7 +63,7 @@
     executable: '{{ nvm.root }}/versions/node/{{ nvm.default }}/bin/npm'
   environment:
     PATH: "{{ ansible_env.PATH }}:{{ nvm.root }}/versions/node/{{ nvm.default }}/bin"
-  with_items: nvm.npm_global_packages
+  with_items: "{{ nvm.npm_global_packages }}"
   when: nvm.npm_global_packages
 
 - name: Ensure nvm is shared with in group staff

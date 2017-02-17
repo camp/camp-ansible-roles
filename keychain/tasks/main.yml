@@ -2,16 +2,22 @@
 - name: Copy scripts
   copy: src={{ item.path }} dest="/var/root/{{ item.path | basename}}"
   sudo: yes
-  with_items: keychain.certs_import_to_system
+  with_items: "{{ keychain.certs_import_to_system }}"
   when: keychain.certs_import_to_system
 - name: Import certs into System keychain
   command: 'security import "/var/root/{{ item.path | basename }}" -k /Library/Keychains/System.keychain -P "{{ item.passphrase }}" {{ item.import_options }}'
   sudo: yes
-  with_items: keychain.certs_import_to_system
+  with_items: "{{ keychain.certs_import_to_system }}"
   when: keychain.certs_import_to_system
 
 - name: Import passwords into System keychain
   command: 'security add-internet-password -s "{{ item.server }}" -a "{{ item.account }}" -w "{{ item.password }}" /Library/Keychains/System.keychain'
   sudo: yes
-  with_items: keychain.passwords_import_to_system
+  with_items: "{{ keychain.passwords_import_to_system }}"
+  register: command_result
+  changed_when:
+  - "'The specified item already exists in the keychain.' not in command_result.stderr"
+  failed_when:
+  - "command_result.rc != 0"
+  - "'The specified item already exists in the keychain.' not in command_result.stderr"
   when: keychain.passwords_import_to_system
