@@ -1,0 +1,39 @@
+---
+# See https://github.com/KrauseFx/xcode-install
+- name: Download xcode-install dependencies
+  get_url:
+    url: https://github.com/neonichu/ruby-domain_name/releases/download/v0.5.99999999/domain_name-0.5.99999999.gem
+    dest: /tmp/domain_name-0.5.99999999.gem
+- name: Ensure xcode-install gem dependencies are installed
+  gem:
+    name: domain_name-0.5.99999999.gem
+    gem_source: /tmp/domain_name-0.5.99999999.gem
+    state: present
+    user_install: no
+  sudo: yes
+- name: Ensure xcode-install gem is installed
+  gem:
+    name: xcode-install
+    state: present
+    user_install: no
+  sudo: yes
+
+- name: Install Xcode CLI Tools
+  shell: /usr/local/bin/xcversion install-cli-tools
+  register: command_result
+  changed_when:
+  - "'Xcode CLI Tools are already installed.' not in command_result.stdout"
+  failed_when:
+  - "command_result.rc != 0"
+  - "'Xcode CLI Tools are already installed.' not in command_result.stdout"
+  when: xcode.install_cli_tools
+
+- name: Install Xcode
+  shell: "/usr/local/bin/xcversion install {{ xcode.version }} {{ '--url=%s' % xcode.url if xcode.url }}"
+  register: command_result
+  changed_when:
+  - "'Version {{ xcode.version }} already installed.' not in command_result.stdout"
+  failed_when:
+  - "command_result.rc != 0"
+  - "'Version {{ xcode.version }} already installed.' not in command_result.stdout"
+  when: xcode.version

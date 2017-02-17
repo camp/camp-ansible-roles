@@ -1,0 +1,6 @@
+---
+# xcode settings
+xcode:
+  install_cli_tools: false
+  url:
+  version: 8.2.1
